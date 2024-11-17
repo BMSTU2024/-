@@ -112,7 +112,8 @@ GameObject:
   - component: {fileID: 18959903568322370}
   - component: {fileID: 4932623492901247087}
   - component: {fileID: 8857321315936602565}
-  - component: {fileID: 2593975001427892576}
+  - component: {fileID: 7173291616597437498}
+  - component: {fileID: -6323435041953156013}
   m_Layer: 0
   m_Name: warrior
   m_TagString: Untagged
@@ -176,7 +177,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_Sprite: {fileID: -1659309190, guid: be34961981c55c64daae767117fc007c, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -269,14 +270,19 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  pr_pl: {fileID: 0}
+  pl_id: 0
   col_mob: {fileID: 0}
   col_atack: {fileID: 0}
   mob_sin: 0
   mob_cos: 0
   gm_round: {fileID: 0}
+  speed: 1
   r_find_mob: 6
---- !u!114 &2593975001427892576
+  v2_wolk: {x: 0, y: 0}
+  cel: {fileID: 0}
+  bl_cel: 0
+  action_now: 0
+--- !u!114 &7173291616597437498
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -293,3 +299,37 @@ MonoBehaviour:
   serverOnly: 0
   visibility: 0
   hasSpawned: 0
+--- !u!114 &-6323435041953156013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7622495599101275495}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ff3ba0becae47b8b9381191598957c8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncDirection: 1
+  syncMode: 0
+  syncInterval: 0
+  target: {fileID: 3025801435232518212}
+  syncPosition: 1
+  syncRotation: 1
+  syncScale: 0
+  onlySyncOnChange: 1
+  compressRotation: 1
+  interpolatePosition: 1
+  interpolateRotation: 1
+  interpolateScale: 1
+  coordinateSpace: 0
+  sendIntervalMultiplier: 1
+  timelineOffset: 0
+  showGizmos: 0
+  showOverlay: 0
+  overlayColor: {r: 0, g: 0, b: 0, a: 0.5}
+  onlySyncOnChangeCorrectionMultiplier: 2
+  rotationSensitivity: 0.01
+  positionPrecision: 0.01
+  scalePrecision: 0.01
