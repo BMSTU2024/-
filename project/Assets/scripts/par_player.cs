@@ -1,7 +1,11 @@
 using Mirror;
+using Org.BouncyCastle.Asn1;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class par_player : NetworkBehaviour
 {
@@ -22,6 +26,9 @@ public class par_player : NetworkBehaviour
     public List<GameObject> gm_selected = new List<GameObject>();
     public List<par_mob> gm_selected_pr = new List<par_mob>();
 
+    [SyncVar]
+    public SyncDictionary<string,int> col_res = new SyncDictionary<string,int>();
+
     
     [Command]
     public void set_gm_selected(List<GameObject> lt)
@@ -29,9 +36,57 @@ public class par_player : NetworkBehaviour
         gm_selected= lt;
         Debug.Log(gm_selected.Count);
     }
-    
+    public void add_res(string st)
+    {
+            add_res_ser(st);
+        //print_res();
+    }
+    [Command]
+    public void add_res_ser(string st)
+    {
+        if (col_res.ContainsKey(st))
+        {
+            col_res[st]++;
+
+        }
+        else
+        {
+            Debug.Log("add res " + st);
+            //col_res.Add(st, 1);
+        }
+    }
+    public void print_res()
+    {
+        TMP_Text tx = null;
+        tx = GameObject.Find("pn res").transform.Find("col res rock").transform.Find("tx res").gameObject.GetComponent<TMP_Text>();
+        tx.text = col_res["res rock"].ToString();
+        tx = GameObject.Find("pn res").transform.Find("col res ruda").transform.Find("tx res").gameObject.GetComponent<TMP_Text>();
+        tx.text = col_res["res ruda"].ToString();
+    }
+
+    [Command]
+    public void del_res(string st,int col)
+    {
+        if (col_res.ContainsKey(st))
+        {
+            col_res[st]-=col;
+        }
+    }
+
     void Start()
     {
+        if (isServer)
+        {
+
+            col_res.Add("res ruda", 0);
+            col_res.Add("res rock", 0);
+        }
+        if (isLocalPlayer)
+        {
+            GameObject.Find("Canvas").transform.Find("pn").Find("pn mobs").Find("button mob create worker").Find("bt").gameObject.GetComponent<ui_button>().pl = this;
+            GameObject.Find("Canvas").transform.Find("pn").Find("pn mobs").Find("button mob create warrior").Find("bt").gameObject.GetComponent<ui_button>().pl = this;
+            //LayoutRebuilder.ForceRebuildLayoutImmediate(GameObject.Find("Canvas").transform.Find("pn").Find("pn mobs").gameObject.GetComponent<RectTransform>());
+        }
         //id = (int)netId;
     }
 
@@ -39,11 +94,30 @@ public class par_player : NetworkBehaviour
     {
         return Camera.main.ScreenToWorldPoint(v3);
     }
+
+    public void create_mob(func.st_create_obj obj)
+    {
+        if (obj.name == "warrior")
+        {
+            //del_res("res rock", 10);
+            //del_res("res ruda", 2);
+            NetworkClient.Send(new func.st_res { znak = -10, type = "res rock",pl = obj.pl });
+            NetworkClient.Send(new func.st_res { znak = -2, type = "res ruda", pl = obj.pl });
+        }
+        else if (obj.name == "worker")
+        {
+            NetworkClient.Send(new func.st_res { znak = -5, type = "res rock", pl = obj.pl });
+        }
+        NetworkClient.Send(obj);
+    }
     // Update is called once per frame
     void Update()
     {
+        
+
         if (isLocalPlayer)
         {
+
             if (Input.GetMouseButtonDown(0))
             {
                 start_selected = true;
@@ -125,6 +199,8 @@ public class par_player : NetworkBehaviour
                 v3.x += Input.GetAxis("Horizontal") * speed_move * Time.deltaTime;
                 v3.y += Input.GetAxis("Vertical") * speed_move * Time.deltaTime;
                 Camera.main.transform.position = v3;
+
+                print_res();
             }
             
             //Camera.main.transform.position = v3;

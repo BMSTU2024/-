@@ -1,5 +1,8 @@
+using Mirror;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net.NetworkInformation;
+
 //using UnityEditor.SearchService;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -9,16 +12,12 @@ using UnityEngine.UI;
 public class ui_button : MonoBehaviour
 {
     // Start is called before the first frame update
-    public string type;
+    public object type;
+    public par_player pl;
+    //public func fn;
     public void perehod_scene(string st)
     {
-        if (st == "menu chats")
-        {
-            data_sql.id_chat_now = -1;
-            data_sql.que_ms_now = new Queue<data_sql.message>();
-        }
-            
-        SceneManager.LoadScene(st);
+        GameObject.Find("data_sql").GetComponent<data_sql>().st_perehod_scene(st);
     }
     public void sql_login()
     {
@@ -41,14 +40,20 @@ public class ui_button : MonoBehaviour
 
     public void sql_entry_chat()
     {
-        data_sql.id_chat_now = int.Parse(type);
-        StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().get_message("http://localhost/DBUnity/get_message.php", data_sql.id_chat_now));
+        data_sql.chat_now = (data_sql.lt_chat)type;
+        GameObject.Find("data_sql").GetComponent<data_sql>().get_message_bl_now = true;
+        GameObject.Find("data_sql").GetComponent<data_sql>().bl_entry_chat = true;
+        StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().get_message("http://localhost/DBUnity/get_message.php", data_sql.chat_now.id));
         
     }
     public void sql_post_message(InputField tx)
     {
-        StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().post_message("http://localhost/DBUnity/post_message.php", data_sql.id_chat_now, tx.text));
+        StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().post_message("http://localhost/DBUnity/post_message.php", data_sql.chat_now.id, tx.text));
         tx.text = "";
+    }
+    public void sql_get_players_chat(bool bl)
+    {
+        StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().get_players_chat("http://localhost/DBUnity/get_players_chat.php", data_sql.chat_now,bl));
     }
     public void exit_login()
     {
@@ -58,6 +63,17 @@ public class ui_button : MonoBehaviour
         data_sql.player_now = null;
         StartCoroutine(sqll.status_account("http://localhost/DBUnity/logining.php", lg, "offline",false));
         SceneManager.LoadScene("entry");
+    }
+
+
+
+    public void create_mob(string tp)
+    {
+        Debug.Log("click");
+        if (tp == "worker" &&pl.col_res["res rock"]>=5)
+            pl.create_mob(new func.st_create_obj { name = tp, pl = this.pl, v2 = pl.gameObject.transform.position});
+        if (tp == "warrior" && pl.col_res["res ruda"] >= 2 && pl.col_res["res ruda"] >= 10)
+            pl.create_mob(new func.st_create_obj { name = tp, pl = this.pl, v2 = pl.gameObject.transform.position });
     }
     /*
     public IEnumerator Get_proverka_account(string url, string lg, int ps)

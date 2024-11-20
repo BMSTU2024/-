@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Net.WebSockets;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 
@@ -21,17 +22,20 @@ public class data_sql : MonoBehaviour
     public class chat
     {
         public string name;
+
     }
     public class lt_chat
     {
         public string ch;
         public string pl;
         public int id;
-        public lt_chat(string ch, string pl, int id)
+        public string status;
+        public lt_chat(string ch, string pl, int id,string status)
         {
             this.ch = ch;
             this.pl = pl;
             this.id = id;
+            this.status = status;
         }
     }
     public class message
@@ -53,9 +57,39 @@ public class data_sql : MonoBehaviour
 
     public  static Queue<message> que_ms_now = new Queue<message>();
     //public Queue<message> que_ms_now_last = new Queue<message>();
-    public static int id_chat_now;
+
+    public static List<lt_chat> pl_ch_now = new List<lt_chat>();
+    public static lt_chat chat_now;
     public static player player_now;
     //public static player chat_now;
+    public void st_perehod_scene(string st)
+    {
+        if (st != "chat" && st!="infa chat")
+        {
+            data_sql.chat_now = null;
+            data_sql.que_ms_now = new Queue<data_sql.message>();
+            get_message_bl = true;
+        }
+        if (st == "chat")
+        {
+            bl_entry_chat = true;
+            get_message_bl_now = true;
+        }
+
+        else
+        {
+            get_message_bl_now = false;
+        }
+            
+        if (st != "infa chat")
+            data_sql.pl_ch_now = null;
+        else
+        {
+            bl_entry_infa_chat = true;
+        }
+        SceneManager.LoadScene(st);
+    }
+
     public bool exiting()
     {
         if (player_now != null)
@@ -102,6 +136,10 @@ public class data_sql : MonoBehaviour
                     data_sql.player_now = lt_pl[0];
                     StartCoroutine(status_account("http://localhost/DBUnity/logining.php", lg, "online",false));
 
+                }
+                else
+                {
+                    GameObject.Find("Canvas").transform.Find("pn error").gameObject.SetActive(true);
                 }
                 //
 
@@ -166,8 +204,9 @@ public class data_sql : MonoBehaviour
             else
             {
                 Debug.Log(web.downloadHandler.text);
-                if(!bl_exit)
-                    SceneManager.LoadScene("base menu");
+                if (!bl_exit)
+                    st_perehod_scene("base menu");
+                    //SceneManager.LoadScene("base menu");
                 else
                 {
                     player_now = null;
@@ -202,16 +241,121 @@ public class data_sql : MonoBehaviour
                     if (stt.Length > 0)
                     {
                        
-                        for (int i = 0; i < stt.Length-1; i+=3)
+                        for (int i = 0; i < stt.Length-1; i+=4)
                         {
                             //int ind_now = i / 2;
-                            lt_ch.Add(new lt_chat(stt[i], stt[i + 1], int.Parse(stt[i+2])));
+                            lt_ch.Add(new lt_chat(stt[i], stt[i + 1], int.Parse(stt[i + 2]), stt[i+3]));
                         }
                         
                     }
                 }
                 ui_ch.print_chats(lt_ch);
 
+                /*
+
+                
+                */
+                //
+
+
+
+                //MatchCollection mc = Regex.Matches(web.downloadHandler.text, @"_");
+                //string[] splitData = Regex.Split(dataText, @"_");
+            }
+            web.Dispose();
+        }
+
+
+    }
+
+    public IEnumerator get_players_chat(string url, data_sql.lt_chat ch,bool bl)
+    {
+        Debug.Log(ch.ch);
+        using (UnityWebRequest web = UnityWebRequest.Get(url + "?php_chat=" + ch.ch))
+        {
+            yield return web.SendWebRequest();
+            if (web.error != null)
+            {
+                Debug.Log("error web");
+            }
+            else
+            {
+                //Debug.Log(web.downloadHandler.text);
+                List<lt_chat> lt_ch = new List<lt_chat>();
+                Dictionary<lt_chat,string> st_chat = new Dictionary<lt_chat,string>();
+                Debug.Log(web.downloadHandler.text);
+                if (!(web.downloadHandler.text == "" || web.downloadHandler.text == null))
+                {
+                    string[] stt = web.downloadHandler.text.Split("_");
+                    //Debug.Log("is truue " + stt.Length + " " );
+
+                    if (stt.Length > 0)
+                    {
+
+                        for (int i = 0; i < stt.Length - 1; i += 5)
+                        {
+                            //int ind_now = i / 2;
+                            lt_chat cc = new lt_chat(stt[i], stt[i + 1], int.Parse(stt[i + 2]), stt[i + 3]);
+                            lt_ch.Add(cc);
+                            if (stt[i + 4].Equals("online"))
+                                st_chat.Add(cc, "в сети");
+                            else
+                                st_chat.Add(cc, "не в сети");
+                        }
+
+                    }
+                }
+                pl_ch_now = lt_ch;
+                if (bl)
+                {
+                    st_perehod_scene("infa chat");
+                    //SceneManager.LoadScene();
+                }
+                if (SceneManager.GetActiveScene().name == "infa chat")
+                {
+                    Debug.Log("LOAD PL");
+                    int i_m = GameObject.Find("sc pn pl").transform.Find("Viewport").Find("pn pl").childCount;
+                    for (int i = 0; i < i_m; i++)
+                    {
+                        Destroy(GameObject.Find("sc pn pl").transform.Find("Viewport").Find("pn pl").GetChild(0).gameObject);
+                    }
+                    foreach (lt_chat ch_now in st_chat.Keys)
+                    {
+                        GameObject gm = Instantiate(GameObject.Find("ignoring").transform.Find("pn infa").gameObject, GameObject.Find("sc pn pl").transform.Find("Viewport").Find("pn pl"));
+                        gm.transform.Find("tx name").gameObject.GetComponent<Text>().text = ch_now.pl;
+                        GameObject gm1 = gm.transform.Find("tx status").gameObject;
+                        if (ch_now.status.Equals("admin"))
+                        {
+                            gm1.GetComponent<Text>().color = new Vector4(1, 0.88f, 0.4f,1);
+                            gm1.GetComponent<Text>().text = "глава чата";
+                        }
+                            
+                        else if (ch_now.status.Equals("member"))
+                        {
+                            gm1.GetComponent<Text>().color = new Vector4(1, 0.55f, 0,1);
+                            gm1.GetComponent<Text>().text = "участник";
+                        }
+
+                        else
+                        {
+                            gm1.GetComponent<Text>().color = new Vector4(0.57f, 0.57f, 0.57f,1);
+                            gm1.GetComponent<Text>().text = "приглашён";
+                        }
+                            
+                        //gm1.GetComponent<Text>().text = ch_now.status;
+                        GameObject gm2 = gm.transform.Find("tx set").gameObject;
+
+                        if (st_chat[ch_now].Equals("в сети"))
+                            gm2.GetComponent<Text>().color = Color.green;
+                        else
+                            gm2.GetComponent <Text>().color = Color.red;
+                        gm2.GetComponent<Text>().text = st_chat[ch_now];
+                    }
+                    //StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().get_message("http://localhost/DBUnity/get_message.php", data_sql.id_chat_now, false, GameObject.Find("Canvas").GetComponent<ui_chat>()));
+                    //GameObject.Find("Canvas").GetComponent<ui_chat>().print_message(que_ms_now_last);
+                    //bl_ch = true;
+
+                }
                 /*
 
                 
@@ -239,7 +383,7 @@ public class data_sql : MonoBehaviour
             {
                 Debug.Log("error web");
             }
-            else
+            else if(get_message_bl_now)
             {
                 int col = que_ms_now.Count;
                 //que_ms_now = new Queue<message>();
@@ -268,9 +412,11 @@ public class data_sql : MonoBehaviour
                     }
 
                 }
-                if (col==0)
+                //col==0
+                if (col==0 &&bl_entry_chat)
                 {
-                    SceneManager.LoadScene("chat");
+                    st_perehod_scene("chat");
+                    //SceneManager.LoadScene("chat");
                 }
                 if (SceneManager.GetActiveScene().name == "chat")
                 {
@@ -337,7 +483,9 @@ public class data_sql : MonoBehaviour
 
     float timer = 0;
     static string date_now_second;
-    bool bl_entry_chat = true;
+    public bool bl_entry_chat = true;
+    public bool bl_entry_infa_chat = true;
+    public bool get_message_bl_now = false;
     bool get_message_bl=false;
         [RuntimeInitializeOnLoadMethod]
     public void Start()
@@ -368,12 +516,20 @@ public class data_sql : MonoBehaviour
                 else if(!get_message_bl)
                 {
                     timer = 0;
-                    StartCoroutine(get_message("http://localhost/DBUnity/get_message.php", data_sql.id_chat_now));
+                    StartCoroutine(get_message("http://localhost/DBUnity/get_message.php", data_sql.chat_now.id));
                 }
             }
 
         }
-
+        else if(SceneManager.GetActiveScene().name == "infa chat")
+        {
+            if (bl_entry_infa_chat)
+            {
+                StartCoroutine(get_players_chat("http://localhost/DBUnity/get_players_chat.php", data_sql.chat_now, false));
+                bl_entry_infa_chat=false;
+            }
+            
+        }
         /*
     if(SceneManager.GetActiveScene().name == "chat" && !bl_ch)
     {

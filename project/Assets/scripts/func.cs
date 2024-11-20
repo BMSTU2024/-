@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Networking;
 using static par_mob;
@@ -101,7 +102,18 @@ public class func : NetworkManager
     {
         public par_mob.lt_mob_group gr;
     }
-
+    public struct st_create_obj : NetworkMessage
+    {
+        public string name;
+        public Vector2 v2;
+        public par_player pl;
+    }
+    public struct st_res : NetworkMessage
+    {
+        public string type;
+        public int znak;
+        public par_player pl;
+    }
     public override void OnStartServer()
     {
         base.OnStartServer();
@@ -109,6 +121,8 @@ public class func : NetworkManager
         NetworkServer.RegisterHandler<start_play_message>(connect_player);
         NetworkServer.RegisterHandler<struct_group_create>(create_group);
         NetworkServer.RegisterHandler<struct_group_delete>(delete_group);
+        NetworkServer.RegisterHandler<st_create_obj>(create_obj_from);
+        NetworkServer.RegisterHandler<st_res>(add_del_res);
 
         foreach (GameObject gm in spawnPrefabs)
         {
@@ -136,6 +150,18 @@ public class func : NetworkManager
             generate();
         //NetworkServer.AddPlayerForConnection(conn, gm);
     }
+    public void create_obj_from(NetworkConnectionToClient conn, st_create_obj mes)
+    {
+        par_player pl = mes.pl;
+        if (pl == null)
+            pl = lt_clients[conn];
+        Vector2 v2 = mes.v2;
+        if(v2==new Vector2(-1,-1))
+            v2 = (Vector2)pl.gameObject.transform.position + Vector2.right;  
+        if(mes.pl)
+        create_object(mes.name, mes.pl, mes.v2);
+        //NetworkServer.AddPlayerForConnection(conn, gm);
+    }
     public override void OnClientConnect()
     {
         base.OnClientConnect();
@@ -155,10 +181,22 @@ public class func : NetworkManager
         GameObject gm = Instantiate(base_obj[name]);
         gm.name = name;
         gm.transform.position = v2;
-        NetworkServer.Spawn(gm);
-        if (gm.GetComponent<par_mob>() != null && pl!=null)
+        
+        if (gm.GetComponent<par_mob>() != null && pl != null)
+        {
             gm.GetComponent<par_mob>().pl = pl;
+            gm.GetComponent<par_mob>().func_now = this;
+        }
+        NetworkServer.Spawn(gm);
 
+    }
+
+    [Server]
+    public void add_del_res(NetworkConnectionToClient con, st_res gr)
+    {
+        Debug.Log(gr.pl);
+        gr.pl.col_res[gr.type]+=gr.znak;
+        //print_res();
     }
     [Server]
     public void create_group(NetworkConnectionToClient con, struct_group_create gr)
@@ -194,6 +232,8 @@ public class func : NetworkManager
         }
         lt_mobs_group.Remove(gr_del.gr);
     }
+
+
     /*
     [Server]
     public void Start()

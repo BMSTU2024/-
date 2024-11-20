@@ -242,6 +242,7 @@ MonoBehaviour:
   cel: {fileID: 0}
   bl_cel: 0
   action_now: 0
+  func_now: {fileID: 0}
 --- !u!61 &8570132853280802536
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -285,7 +286,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 0.6, y: 0.6}
   m_EdgeRadius: 0
 --- !u!114 &-3807122405498469105
 MonoBehaviour:
@@ -364,7 +365,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 7
+  m_Constraints: 4
 --- !u!114 &-2290793366133649365
 MonoBehaviour:
   m_ObjectHideFlags: 0

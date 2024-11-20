@@ -9,6 +9,7 @@ public class par_nature : NetworkBehaviour, IPointerClickHandler
     // Start is called before the first frame update
     [SyncVar]
     public int hp;
+    public string drop;
     void IPointerClickHandler.OnPointerClick(PointerEventData eventData)
     {
         Debug.Log("CLICK");

@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 8626297362902036307}
   - component: {fileID: 1629694689060175953}
   - component: {fileID: 2931665157672415004}
+  - component: {fileID: -6199477293612825437}
   m_Layer: 0
   m_Name: ruda
   m_TagString: Untagged
@@ -147,6 +148,8 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
+  hp: 20
+  drop: res ruda
 --- !u!114 &2931665157672415004
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -164,3 +167,30 @@ MonoBehaviour:
   serverOnly: 0
   visibility: 0
   hasSpawned: 0
+--- !u!50 &-6199477293612825437
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2598907631753883069}
+  m_BodyType: 2
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0

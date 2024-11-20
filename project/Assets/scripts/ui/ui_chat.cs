@@ -25,7 +25,7 @@ public class ui_chat : MonoBehaviour
             Debug.Log("is truue[2] " + ii);
             GameObject obj=Instantiate(GameObject.Find("ignoring").transform.Find("bt chat").gameObject,par.transform);
             obj.transform.Find("name chat").GetComponent<Text>().text = st.ch;
-            obj.GetComponent<ui_button>().type = st.id.ToString();
+            obj.GetComponent<ui_button>().type = st;
             obj.active=true;
             ii++;
         }
@@ -40,7 +40,7 @@ public class ui_chat : MonoBehaviour
         foreach (data_sql.message st in lt_ms)
         {
             GameObject obj = null;
-            if (st.sender == data_sql.id_chat_now)
+            if (st.sender == data_sql.chat_now.id)
             {
                 obj = Instantiate(GameObject.Find("ignoring").transform.Find("message post").gameObject, par.transform);
             }
