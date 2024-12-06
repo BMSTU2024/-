@@ -14,6 +14,8 @@ public class par_player : NetworkBehaviour
     public List<int> lt_fr_id = new List<int>();
     [SyncVar]
     public int id = 0;
+    [SyncVar]
+    public string name;
 
     public int count;
 
@@ -33,8 +35,14 @@ public class par_player : NetworkBehaviour
     [Command]
     public void set_gm_selected(List<GameObject> lt)
     {
-        gm_selected= lt;
-        Debug.Log(gm_selected.Count);
+            gm_selected= lt;
+        
+    }
+    [Command]
+    public void add_gm_selected(GameObject gm)
+    {
+            gm_selected.Add(gm);
+
     }
     public void add_res(string st)
     {
@@ -94,7 +102,17 @@ public class par_player : NetworkBehaviour
     {
         return Camera.main.ScreenToWorldPoint(v3);
     }
-
+    [TargetRpc]
+    public void proverka_win(NetworkConnectionToClient con, bool bl)
+    {
+        if (bl)
+        {
+            GameObject.Find("Canvas").transform.Find("pn win").gameObject.active = true;
+        }
+        else
+            GameObject.Find("Canvas").transform.Find("pn lose").gameObject.active = true;
+        //OnStopClient();
+    }
     public void create_mob(func.st_create_obj obj)
     {
         if (obj.name == "warrior")
@@ -122,11 +140,13 @@ public class par_player : NetworkBehaviour
             {
                 start_selected = true;
                 v2_start = Input.mousePosition;
-
-
+                Debug.Log("set lt -1 " +id);
+                set_gm_selected(new List<GameObject>());
+                Debug.Log("click mouse");
             }
             if (start_selected)
             {
+                Debug.Log("sel id= " + id);
                 //Vector2 v2_c = v2_in_world(Input.mousePosition) - v2_in_world(v2_start);
                 RectTransform r_select = GameObject.Find("select").GetComponent<RectTransform>();
 
@@ -145,7 +165,8 @@ public class par_player : NetworkBehaviour
                 //ms_coll = Physics2D.OverlapAreaAll(new Vector2(0, 0), new Vector2(1, 1));
 
                 //Debug.Log(NetworkConnectionToClient.LocalConnectionId);
-                set_gm_selected( new List<GameObject>());
+                Debug.Log("set lt 0");
+                //set_gm_selected( new List<GameObject>());
                 foreach (Collider2D c in ms_coll)
                 {
                     //
@@ -153,19 +174,26 @@ public class par_player : NetworkBehaviour
                     {
                         //Debug.Log(c.gameObject.GetComponent<par_mob>().pl + "   " + id + "   select id");
                         if (c.gameObject.GetComponent<par_mob>().pl == this && !gm_selected.Contains(c.gameObject))
+                        {
+                            Debug.Log("set lt 0-1");
+                            //gm_selected.Add(c.gameObject);
+                            add_gm_selected(c.gameObject);
+                        }
 
-                            gm_selected.Add(c.gameObject);
+                            
                         //gm_selected_pr.Add(c.gameObject.GetComponent<par_mob>());
                     }
 
                 }
-                set_gm_selected(gm_selected);
+                Debug.Log("set lt 1");
+                //set_gm_selected(gm_selected);
             }
             if (Input.GetMouseButtonUp(0) && start_selected)
             {
                 start_selected = false;
                 GameObject.Find("select").GetComponent<RectTransform>().sizeDelta = Vector2.zero;
-                //v2_start = Input.mousePosition;
+                v2_start = Input.mousePosition;
+                //set_gm_selected(new List<GameObject>());
             }
             /*
             Debug.Log(Input.GetMouseButtonDown(1) + " " + gm_selected.Count);

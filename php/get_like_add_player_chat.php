@@ -13,7 +13,7 @@ catch(PDOException $e)
 	echo '<h1>An error has occurred.</h1><pre>', $e->getMessage()
             ,'</pre>';
 }
- //запрос с получением всех игроков
+ 
 $sth = $dbh->query('SELECT * FROM myDB.player');
 $sth->setFetchMode(PDO::FETCH_ASSOC);
  

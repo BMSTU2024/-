@@ -13,6 +13,7 @@ catch(PDOException $e)
 	echo '<h1>An error has occurred.</h1><pre>', $e->getMessage()
             ,'</pre>';
 }
+//запрос с получением игрока с определённым логином, паролем и статусом 
 $sth = $dbh->prepare('SELECT * FROM myDB.player WHERE (myDB.player.login = :pr_login and myDB.player.password=:pr_password and myDB.player.status=:pr_status)');
 
 $sth->bindParam(':pr_login',$_GET['php_login'],PDO::PARAM_STR);

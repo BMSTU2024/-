@@ -2,6 +2,7 @@ using Mirror;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Runtime.ConstrainedExecution;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using Unity.VisualScripting;
@@ -16,8 +17,9 @@ public class func : NetworkManager
     //public func_sql f_sql;
     
     // Start is called before the first frame update
-    public static List<GameObject> lt_mobs = new List<GameObject>();
-    
+    public List<GameObject> lt_mobs = new List<GameObject>();
+    public List<GameObject> lt_builds = new List<GameObject>();
+
     public List<par_mob.lt_mob_group> lt_mobs_group = new List< par_mob.lt_mob_group>();
     public List<Vector2> v2_start = new List<Vector2>();
 
@@ -26,6 +28,8 @@ public class func : NetworkManager
     public List<GameObject> obj_sql = new List<GameObject>();
 
     public Dictionary<NetworkConnectionToClient,par_player> lt_clients = new Dictionary<NetworkConnectionToClient, par_player>();
+    public Dictionary<NetworkConnectionToClient, string> lt_clients_name = new Dictionary<NetworkConnectionToClient, string>();
+    public par_player player_win = null;
     public List<NetworkConnectionToClient>lt_con = new List<NetworkConnectionToClient>();
     public static int size_global = 20;
     [Server]
@@ -39,13 +43,18 @@ public class func : NetworkManager
 
             Debug.Log("create player");
             GameObject gm = Instantiate(playerPrefab);
+            gm.name = "baza";
             gm.GetComponent<par_player>().id = con.connectionId;
+            gm.GetComponent<par_player>().name = lt_clients_name[con];
+            gm.GetComponent<par_build>().pl = gm.GetComponent<par_player>();
             lt_clients.Add(con, gm.GetComponent<par_player>());
+            lt_builds.Add(gm);
             Vector2 v2= v2_start[Random.Range(0, v2_start.Count - 1)];
             gm.transform.position = v2;
             
             NetworkServer.AddPlayerForConnection(con, gm);
             create_object("worker",lt_clients[con],v2+Vector2.right);
+            create_object("warrior", lt_clients[con], v2 + Vector2.up);
             //create_object("worker", lt_clients[con], v2 + Vector2.down);
             lt_st.Add(v2);
             v2_start.Remove(v2);
@@ -58,6 +67,8 @@ public class func : NetworkManager
             create_object("rock", new Vector2(size_global - i-1, size_global-1));
             create_object("rock", new Vector2(size_global-1,  i));
         }
+        //if(false)
+
         for (int i = 1; i < size_global-1; i++)
         {
             for (int j = 1; j < size_global-1; j++)
@@ -74,6 +85,7 @@ public class func : NetworkManager
                         break;
                     }
                 }
+                //bl = false;
                 if (bl)
                 {
                     if(Random.Range(0,10)!=0)
@@ -82,13 +94,19 @@ public class func : NetworkManager
                         create_object("ruda", new Vector2(j, i));
                 }
             }
+        
         }
+        
     }
     public struct n_message: NetworkMessage
     {
         public Vector2 v2;
     }
     public struct start_play_message : NetworkMessage
+    {
+        public string name;
+    }
+    public struct stop_play_message : NetworkMessage
     {
         public string name;
     }
@@ -114,6 +132,15 @@ public class func : NetworkManager
         public int znak;
         public par_player pl;
     }
+    public struct st_mob_vis : NetworkMessage
+    {
+        public GameObject gm_cel;
+        public par_mob mob_now;
+    }
+    public struct st_del_obj : NetworkMessage
+    {
+        public GameObject gm;
+    }
     public override void OnStartServer()
     {
         base.OnStartServer();
@@ -123,6 +150,8 @@ public class func : NetworkManager
         NetworkServer.RegisterHandler<struct_group_delete>(delete_group);
         NetworkServer.RegisterHandler<st_create_obj>(create_obj_from);
         NetworkServer.RegisterHandler<st_res>(add_del_res);
+        NetworkServer.RegisterHandler<st_mob_vis>(return_mob_vis);
+        NetworkServer.RegisterHandler<st_del_obj>(del_obj);
 
         foreach (GameObject gm in spawnPrefabs)
         {
@@ -130,6 +159,17 @@ public class func : NetworkManager
             base_obj.Add(gm.name, gm);
         }
         //NetworkServer.Spawn();
+    }
+    public override void OnClientDisconnect()
+    {
+        base.OnClientDisconnect();
+        //lt_clients.Remove()
+    }
+    public override void OnStopServer()
+    {
+        base.OnStopServer();
+
+
     }
     /*
     public void create_player(NetworkConnectionToClient conn,n_message mes)
@@ -145,9 +185,15 @@ public class func : NetworkManager
     {
         Debug.Log("connect player " + mes.name);
         lt_con.Add(conn);
+        lt_clients_name.Add(conn, mes.name);
         col_players++;
-        if(col_players==2)
+        if (col_players == 2)
+        {
+            StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().post_battle_start("http://localhost/DBUnity/set_battle.php"));
             generate();
+
+        }
+           
         //NetworkServer.AddPlayerForConnection(conn, gm);
     }
     public void create_obj_from(NetworkConnectionToClient conn, st_create_obj mes)
@@ -185,12 +231,73 @@ public class func : NetworkManager
         if (gm.GetComponent<par_mob>() != null && pl != null)
         {
             gm.GetComponent<par_mob>().pl = pl;
-            gm.GetComponent<par_mob>().func_now = this;
+            //gm.GetComponent<par_mob>().func_now = this;
+            lt_mobs.Add(gm);
         }
-        NetworkServer.Spawn(gm);
+        else if(gm.GetComponent<par_build>() != null)
+        {
+            gm.GetComponent<par_build>().pl = pl;
+            //gm.GetComponent<par_mob>().func_now = this;
+            lt_builds.Add(gm);
+        }
+            NetworkServer.Spawn(gm);
 
     }
+    public void del_obj(NetworkConnectionToClient con, st_del_obj mb)
+    {
+        if (mb.gm.GetComponent<par_mob>() != null)
+        {
+            lt_mobs.Remove(mb.gm);
+            mb.gm.GetComponent<par_mob>().del_group(false);
+        }
+        else if (mb.gm.GetComponent<par_build>() != null)
+        {
+            lt_builds.Remove(mb.gm);
+            //mb.gm.GetComponent<par_build>().del_group(false);
+        }
+        if(mb.gm.name!="baza")
+            NetworkServer.Destroy(mb.gm);
+        else
+        {
+            List<par_player> lt_pl = new List<par_player> ();
+            string pl_win = null;
+            string pl_lose = null;
+            foreach (NetworkConnectionToClient con1 in lt_clients.Keys)
+            {
+                if (mb.gm.GetComponent<par_build>().pl != lt_clients[con1])
+                {
+                    lt_clients[con1].proverka_win(con1, true);
+                    pl_win = lt_clients_name[con1];
+                }
+                    
+                else
+                {
+                    lt_clients[con1].proverka_win(con1, false);
+                    pl_lose = lt_clients_name[con1];
+                }
+            }
 
+            lt_mobs.Clear();
+            lt_builds.Clear();
+            StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().post_battle_end("http://localhost/DBUnity/set_battle.php",pl_win,pl_lose));
+            try
+            {
+                //foreach (NetworkConnectionToClient con_ in lt_clients.Keys)
+                //{
+                    //OnClientDisconnect();
+                //}
+                //StopClient();
+                //StopServer();
+            }
+            catch (System.Exception)
+            {
+
+                //throw;
+            }
+            //
+            //pl_lose.proverka_win(false);
+        }
+    }
     [Server]
     public void add_del_res(NetworkConnectionToClient con, st_res gr)
     {
@@ -233,7 +340,37 @@ public class func : NetworkManager
         lt_mobs_group.Remove(gr_del.gr);
     }
 
+    [Server]
+    public void return_mob_vis(NetworkConnectionToClient con, st_mob_vis st)
+    {
+        GameObject gm_now = null;
+        //Debug.Log(lt_mobs.Count);
+        foreach (GameObject gm in lt_mobs)
+        {
+            if (gm_now!=null && st.mob_now.gameObject.name=="warrior")
+            {
+                //Debug.Log(Vector2.Distance(gm.transform.position, st.mob_now.gameObject.transform.position)+"  distance");
+            }
+            if (gm.GetComponent<par_mob>().pl!= st.mob_now.pl)
+                if ( (gm_now==null || Vector2.Distance(gm.transform.position, st.mob_now.gameObject.transform.position) < Vector2.Distance(gm_now.transform.position, st.mob_now.gameObject.transform.position)   ) && Vector2.Distance(gm.transform.position, st.mob_now.gameObject.transform.position)<st.mob_now.r_find_mob   )
+                    gm_now = gm;
+        }
+        foreach (GameObject gm in lt_builds)
+        {
+            if (gm.GetComponent<par_build>().pl != st.mob_now.pl)
+                if ((gm_now == null || Vector2.Distance(gm.transform.position, st.mob_now.gameObject.transform.position) < Vector2.Distance(gm_now.transform.position, st.mob_now.gameObject.transform.position)) && Vector2.Distance(gm.transform.position, st.mob_now.gameObject.transform.position) < st.mob_now.r_find_mob)
+                    gm_now = gm;
+        }
+        if (gm_now != null)
+        {
+            st.gm_cel = gm_now;
+            st.mob_now.cel = gm_now;
+            st.mob_now.v2_wolk = gm_now.transform.position;
+        }
 
+        //Debug.Log(gm_now);
+
+    }
     /*
     [Server]
     public void Start()

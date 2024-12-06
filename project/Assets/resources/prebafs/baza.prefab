@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 2234644532263943200}
   - component: {fileID: -5240947747879651819}
   - component: {fileID: -6056644367282786376}
+  - component: {fileID: -8185579321339840223}
   m_Layer: 0
   m_Name: baza
   m_TagString: Untagged
@@ -244,3 +245,19 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
+--- !u!114 &-8185579321339840223
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4413421292306310503}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ddd1327fca45e4469f74904995ce3e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  hp: 10

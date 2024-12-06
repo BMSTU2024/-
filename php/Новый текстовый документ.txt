@@ -1,4 +1,3 @@
-<?php
 $hostname = 'localhost';
 $username = 'root';
 $password = '';
@@ -13,8 +12,8 @@ catch(PDOException $e)
 	echo '<h1>An error has occurred.</h1><pre>', $e->getMessage()
             ,'</pre>';
 }
- //запрос с получением всех игроков
-$sth = $dbh->query('SELECT * FROM myDB.player');
+ 
+$sth = $dbh->query('SELECT * FROM myDB.data');
 $sth->setFetchMode(PDO::FETCH_ASSOC);
  
 $result = $sth->fetchAll(); 
@@ -22,8 +21,9 @@ if (count($result) > 0)
 {
 	foreach($result as $r) 
 	{
-		echo $r['login'],"_";
-		echo $r['password'], "_";
+		echo $r['id'], "\n _";
+		echo $r['name'], "\n _";
+		echo $r['data'], "\n _";
+		echo $r['num'], "\n _";
 	}
 }
-?>

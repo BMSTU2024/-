@@ -30,6 +30,8 @@ public class fn : NetworkManager
         gm.GetComponent<sq>().pl = ms.pl;
         gm.transform.position = v2;
         NetworkServer.Spawn(gm);
+
+        StopHost();
     }
     // Start is called before the first frame update
     void Start()

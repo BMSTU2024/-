@@ -13,6 +13,7 @@ catch(PDOException $e)
 	echo '<h1>An error has occurred.</h1><pre>', $e->getMessage()
             ,'</pre>';
 }
+//запрос с добавлением сообщения в бд
 $sth = $dbh->prepare(
 	'insert into myDB.message( sender,text,data) values (:pr_pl,:pr_tx,now())'
 

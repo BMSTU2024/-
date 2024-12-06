@@ -23,8 +23,19 @@ public class ui_button : MonoBehaviour
     {
         data_sql sql = GameObject.Find("data_sql").GetComponent<data_sql>();
         string lg = GameObject.Find("input tx login").GetComponent<InputField>().text;
-        int ps =int.Parse( GameObject.Find("input tx password").GetComponent<InputField>().text);
-        StartCoroutine(sql.Get_proverka_account("http://localhost/DBUnity/get_player.php", lg,ps));
+        try
+        {
+            int ps = int.Parse(GameObject.Find("input tx password").GetComponent<InputField>().text);
+            StartCoroutine(sql.Get_proverka_account("http://localhost/DBUnity/get_player.php", lg, ps));
+        }
+        catch (System.Exception)
+        {
+            GameObject.Find("Canvas").transform.Find("pn error").Find("tx error").gameObject.GetComponent<Text>().text = "в пароле могут быть только числа";
+            GameObject.Find("Canvas").transform.Find("pn error").gameObject.SetActive(true);
+            //throw;
+        }
+        
+       
 
     }
     public void sql_registrated()
@@ -46,6 +57,21 @@ public class ui_button : MonoBehaviour
         StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().get_message("http://localhost/DBUnity/get_message.php", data_sql.chat_now.id));
         
     }
+    public void sql_create_chat(InputField inp)
+    {
+        //data_sql.chat_now = (data_sql.lt_chat)type;
+        //GameObject.Find("data_sql").GetComponent<data_sql>().get_message_bl_now = true;
+        //GameObject.Find("data_sql").GetComponent<data_sql>().bl_entry_chat = true;
+        string st = inp.text;
+        if (st!="")
+            StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().create_chat("http://localhost/DBUnity/create_chat.php", st));
+        else
+        {
+            GameObject.Find("Canvas").transform.Find("pn error").Find("tx error").gameObject.GetComponent<Text>().text = "поле не может быть пустым";
+            GameObject.Find("Canvas").transform.Find("pn error").gameObject.SetActive(true);
+        }
+            
+    }
     public void sql_post_message(InputField tx)
     {
         StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().post_message("http://localhost/DBUnity/post_message.php", data_sql.chat_now.id, tx.text));
@@ -54,6 +80,19 @@ public class ui_button : MonoBehaviour
     public void sql_get_players_chat(bool bl)
     {
         StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().get_players_chat("http://localhost/DBUnity/get_players_chat.php", data_sql.chat_now,bl));
+    }
+    public void sql_add_player_in_chat()
+    {
+        StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().add_players_in_chat("http://localhost/DBUnity/chat_player_add.php",type.ToString() ,data_sql.chat_now.ch));
+    }
+    public void yes_add_chat(ui_tx tx)
+    {
+        StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().yes_add_player_chat("http://localhost/DBUnity/yes_chat_player_add.php",data_sql.player_now.login ,((data_sql.lt_chat)type).ch,tx));
+        tx.sql_chats();
+    }
+    public void not_add_chat()
+    {
+
     }
     public void exit_login()
     {
@@ -72,7 +111,7 @@ public class ui_button : MonoBehaviour
         Debug.Log("click");
         if (tp == "worker" &&pl.col_res["res rock"]>=5)
             pl.create_mob(new func.st_create_obj { name = tp, pl = this.pl, v2 = pl.gameObject.transform.position});
-        if (tp == "warrior" && pl.col_res["res ruda"] >= 2 && pl.col_res["res ruda"] >= 10)
+        if (tp == "warrior" && pl.col_res["res ruda"] >= 2 && pl.col_res["res rock"] >= 10)
             pl.create_mob(new func.st_create_obj { name = tp, pl = this.pl, v2 = pl.gameObject.transform.position });
     }
     /*

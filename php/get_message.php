@@ -13,7 +13,7 @@ catch(PDOException $e)
 	echo '<h1>An error has occurred.</h1><pre>', $e->getMessage()
             ,'</pre>';
 }
-
+//запрос с получением всех сообщений(либо с 0, либо с определённой позиции и до конца) конкретного игрока в конкретном чате .Сортирует по дате сообщения
 $par_col=(int)$_GET['php_col'];
 $sth=null;
 if($par_col==0){

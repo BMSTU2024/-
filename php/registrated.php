@@ -13,6 +13,7 @@ catch(PDOException $e)
 	echo '<h1>An error has occurred.</h1><pre>', $e->getMessage()
             ,'</pre>';
 }
+//запрос с получением игрока по имени. Если такого нет, то добавляет в БД
 $sth = $dbh->prepare('SELECT * FROM myDB.player WHERE (myDB.player.login = :pr_login)');
 
 $sth->bindParam(':pr_login',$_POST['php_login'],PDO::PARAM_STR);

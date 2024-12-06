@@ -238,6 +238,7 @@ MonoBehaviour:
   gm_round: {fileID: 0}
   speed: 1
   r_find_mob: 6
+  hp: 2
   v2_wolk: {x: 0, y: 0}
   cel: {fileID: 0}
   bl_cel: 0

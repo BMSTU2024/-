@@ -8,7 +8,8 @@ using UnityEngine.UIElements;
 public class ui_chat : MonoBehaviour
 {
     // Start is called before the first frame update
-
+    public int type = 0;
+    public IEnumerator action;
     public Queue<data_sql.message> messages = new Queue<data_sql.message>();
     public void print_chats(List<data_sql.lt_chat> lt_ch)
     {
@@ -20,13 +21,51 @@ public class ui_chat : MonoBehaviour
             Destroy(par.transform.GetChild(i).gameObject);
         }
         ii = 0;
-        foreach (data_sql.lt_chat st in lt_ch)
+        if (type == 0)
+        {
+            foreach (data_sql.lt_chat st in lt_ch)
+            {
+                Debug.Log("is truue[2] " + ii);
+                GameObject obj = Instantiate(GameObject.Find("ignoring").transform.Find("bt chat").gameObject, par.transform);
+                obj.transform.Find("name chat").GetComponent<Text>().text = st.ch;
+                obj.GetComponent<ui_button>().type = st;
+                obj.active = true;
+                ii++;
+            }
+        }
+        else if(type==1)
+        {
+            foreach (data_sql.lt_chat st in lt_ch)
+            {
+                Debug.Log("is truue[2] " + ii);
+                GameObject obj = Instantiate(GameObject.Find("ignoring").transform.Find("bt add chat").gameObject, par.transform);
+                obj.transform.Find("name chat").GetComponent<Text>().text = st.ch;
+                obj.transform.Find("bt yes").GetComponent<ui_button>().type=st;
+                obj.transform.Find("bt not").GetComponent<ui_button>().type = st;
+                //obj.GetComponent<ui_button>().type = st;
+                obj.active = true;
+                ii++;
+            }
+        }
+
+    }
+    public void print_players(List<string> lt_ch)
+    {
+        GameObject par = GameObject.Find("Scroll View").transform.Find("Viewport").Find("Content").gameObject;
+        int ii = par.transform.childCount;
+        for (int i = 0; i < ii; i++)
+        {
+            Debug.Log("is truue[1] " + i);
+            Destroy(par.transform.GetChild(i).gameObject);
+        }
+        ii = 0;
+        foreach (string st in lt_ch)
         {
             Debug.Log("is truue[2] " + ii);
-            GameObject obj=Instantiate(GameObject.Find("ignoring").transform.Find("bt chat").gameObject,par.transform);
-            obj.transform.Find("name chat").GetComponent<Text>().text = st.ch;
+            GameObject obj = Instantiate(GameObject.Find("ignoring").transform.Find("bt player").gameObject, par.transform);
+            obj.transform.Find("name player").GetComponent<Text>().text = st;
             obj.GetComponent<ui_button>().type = st;
-            obj.active=true;
+            obj.active = true;
             ii++;
         }
     }

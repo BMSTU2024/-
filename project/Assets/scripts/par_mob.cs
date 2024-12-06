@@ -83,13 +83,20 @@ public class par_mob : NetworkBehaviour
     [SyncVar]
     public par_player pl;
     public Collider2D col_mob;
-    public Collider2D col_atack;
-    public int mob_sin = 0;
-    public int mob_cos = 0;
+    public col_attack col_atack;
+    [SyncVar]
+    public float mob_sin = 0;
+    [SyncVar]
+    public float mob_cos = 0;
     public GameObject gm_round;
     public float speed = 1;
     [SyncVar]
     public int r_find_mob = 6;
+
+
+    [SyncVar]
+    public int hp = 0;
+
     public Dictionary<int, action> lt_action = new Dictionary<int, action>();
 
     [SyncVar]
@@ -102,14 +109,23 @@ public class par_mob : NetworkBehaviour
 
     [SyncVar]
     public lt_mob_group group;
+    //[SyncVar]
     public func func_now;
 
+    public GameObject get_auto_cel()
+    {
+        //List < GameObject > list  = new List<GameObject>();
+        func.st_mob_vis st = new func.st_mob_vis { mob_now=this};
+        NetworkClient.Send(st);
+        //Debug.Log(st.gm_cel);
+        return st.gm_cel;
+    }
     public void del_group(bool bl)
     {
         Debug.Log("del group");
         if (group != null)
         {
-
+            
             group.lt.Remove(gameObject);
             if (group.lt.Count == 0 || bl)
             {
@@ -196,7 +212,11 @@ public class par_mob : NetworkBehaviour
     {
         if (isServer)
         {
-            if (action_now == 1 && gameObject.name == "worker" && cel != null)
+            if (cel == null && action_now!=0)
+            {
+                end_action(action_now);
+            }
+            else if (action_now == 1 && gameObject.name == "worker" && cel != null)
             {
                 par_nature nt = cel.GetComponent<par_nature>();
                 nt.hp--;
@@ -208,6 +228,43 @@ public class par_mob : NetworkBehaviour
 
                     end_action(1);
                 }
+            }
+            if (action_now == 1 && gameObject.name == "warrior" && cel != null)
+            {
+                foreach (GameObject gm in col_atack.gm_entered)
+                {
+                    if (gm.GetComponent<par_mob>() != null)
+                    {
+                        par_mob mb = gm.GetComponent<par_mob>();
+                        mb.hp--;
+                        if (mb.hp == 0)
+                        {
+                            NetworkClient.Send(new func.st_del_obj { gm = gm });
+                        }
+                    }
+                    else
+                    {
+                        par_build bl = gm.GetComponent<par_build>();
+                        bl.hp--;
+                        if (bl.hp == 0)
+                        {
+                            NetworkClient.Send(new func.st_del_obj { gm = gm });
+                        }
+                    }
+
+                }
+                /*
+                par_mob nt = cel.GetComponent<par_nature>();
+                nt.hp--;
+                if (nt.hp <= 0)
+                {
+                    NetworkClient.Send(new func.st_create_obj { name = nt.drop, pl = this.pl, v2 = cel.transform.position });
+                    //func_now.create_object(nt.drop,pl,cel.transform.position);
+                    NetworkServer.Destroy(cel);
+
+                    end_action(1);
+                }
+                */
             }
         }
     }
@@ -230,39 +287,85 @@ public class par_mob : NetworkBehaviour
         {
             lt_action.Add(1,new action(action.condition.enter,0));
         }
-        
+        if (gameObject.name == "warrior")
+        {
+            lt_action.Add(1, new action(action.condition.enter, 0));
+        }
+
     }
     // Update is called once per frame
     void Update()
     {
-
-        //Debug.Log(lt_gm.Count);
-        /*
-        float h = Screen.height;
-        float w = Screen.width;
-        Vector2 v2_m = Input.mousePosition;
-        v2_m.y -= h / 2;
-        v2_m.x -= w / 2;
-        float c = Mathf.Pow(v2_m.x * v2_m.x + v2_m.y * v2_m.y, 0.5f);
-        float f_sin = v2_m.y / c;
-        float f_cos = v2_m.x / c;
-        float angle = 0;
-        if (f_sin >= 0)
+        if (isServer)
         {
-            angle = (-f_cos + 1) * 90;
-        }
-        else
-        {
-            angle = (f_cos + 1) * 90 + 180;
-        }
-        */
+            //Debug.Log(lt_gm.Count);
+            if (col_atack != null && (v2_wolk != Vector2.zero || cel != null))
+            {
+                float h = Screen.height;
+                float w = Screen.width;
+                //Vector2 v2_m = Input.mousePosition;
+                Vector2 v2_m = v2_wolk;
+                if (cel != null)
+                    v2_m = cel.transform.position;
+                v2_m.y -= transform.position.y;
+                v2_m.x -= transform.position.x;
+                float c = Mathf.Pow(v2_m.x * v2_m.x + v2_m.y * v2_m.y, 0.5f);
+                float f_sin = v2_m.y / c;
+                float f_cos = v2_m.x / c;
+                mob_cos = f_cos;
+                mob_sin = f_sin;
+                float angle = 0;
+                if (f_sin >= 0)
+                {
+                    angle = (-f_cos + 1) * 90;
+                }
+                else
+                {
+                    angle = (f_cos + 1) * 90 + 180;
+                }
 
-        //angle = -angle + 90;
-        //Vector3 v3_r = new Vector3(0, angle, 0);
-        //gameObject.transform.rotation = Quaternion.Euler(v3_r);
+
+                //angle = -angle + 90;
+                angle -= 90;
+                Vector3 v3_r = new Vector3(0, 0, angle);
+                gameObject.transform.Find("round comp").rotation = Quaternion.Euler(v3_r);
+            }
+            if (col_atack != null )
+            {
+                if(col_atack.gm_entered.Count > 0)
+                {
+                    if (v2_wolk != Vector2.zero)
+                    {
+                        v2_wolk = Vector2.zero;
+                        gameObject.GetComponent<Animator>().SetBool("wolk", false);
+                        del_group(false);
+                        if (gameObject.name == "warrior")
+                            start_action(1);
+                    }
+                }
+                else
+                {
+                    if (gameObject.name == "warrior")
+                        end_action(1);
+                }
+            }
+            if (gameObject.name == "warrior" && action_now == 0 && group==null)
+            {
+                GameObject gm = get_auto_cel();
+                
+                if (gm != null)
+                {
+                    //cel = gm;
+                    //v2_wolk = gm.transform.position;
+                }
+                
+            }
+
+            //Vector3 v3_r = new Vector3(0, angle, 0);
+            //gameObject.transform.rotation = Quaternion.Euler(v3_r);
 
 
-            if (v2_wolk != Vector2.zero && isServer)
+            if (v2_wolk != Vector2.zero )
             {
                 gameObject.GetComponent<Animator>().SetBool("wolk", true);
                 //Debug.Log("wolk");
@@ -275,14 +378,17 @@ public class par_mob : NetworkBehaviour
                     gameObject.GetComponent<Animator>().SetBool("wolk", false);
 
                 }
-            //gameObject.GetComponent<Rigidbody2D>().AddForce(v2_d*5, ForceMode2D.Impulse);
+                //gameObject.GetComponent<Rigidbody2D>().AddForce(v2_d*5, ForceMode2D.Impulse);
                 Vector2 v2 = (Vector2)transform.position + v2_d;
                 //if(isServer)
-                    transform.position = v2;
+                transform.position = v2;
 
             }
-        
-        
+
+
+        }
+
+
 
 
         //gameObject.transform.Find("Canvas m").Find("tx").gameObject.GetComponent<TMP_Text>().text = v2_wolk.x.ToString()+" " + v2_wolk.y.ToString();
