@@ -14,15 +14,17 @@ catch(PDOException $e)
             ,'</pre>';
 }
 $str=$_GET['player'];
-//запрос с получением всех игроков конкретного чата
+$pr='deleted';
+//запрос с получением всех игроков конкретного чата(кроме удалённых)
 if($str==null || true)
-	$sth = $dbh->prepare('SELECT myDB.list_chats.chat,myDB.list_chats.player,myDB.list_chats.id,myDB.list_chats.status as st1,myDB.player.status as st2 FROM myDB.list_chats inner join myDB.player on (player=login) WHERE myDB.list_chats.chat=:pr_chat');
-else {
+	$sth = $dbh->prepare('SELECT myDB.list_chats.chat,myDB.list_chats.player,myDB.list_chats.id,myDB.list_chats.status as st1,myDB.player.status as st2 FROM myDB.list_chats inner join myDB.player on (player=login) WHERE( myDB.list_chats.chat=:pr_chat and myDB.list_chats.status!=:pr_status)');
+
+/*else {
 	$sth = $dbh->prepare('SELECT myDB.list_chats.chat,myDB.list_chats.player,myDB.list_chats.id,myDB.list_chats.status as st1,myDB.player.status as st2 FROM myDB.list_chats inner join myDB.player on (player=login) WHERE myDB.list_chats.chat=:pr_chat and myDB.list_chats.player like :pr_find');
 	$strr=$str.'%';
 	$sth->bindParam(':pr_find',$strr,PDO::PARAM_STR);
-}
-
+}*/
+$sth->bindParam(':pr_status',$pr,PDO::PARAM_STR);
 $sth->bindParam(':pr_chat',$_GET['php_chat'],PDO::PARAM_STR);
 
 $sth->execute();

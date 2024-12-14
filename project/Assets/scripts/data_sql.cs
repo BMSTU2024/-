@@ -67,6 +67,14 @@ public class data_sql : MonoBehaviour
             this.status = status;
         }
     }
+    public enum type_chat_set
+    {
+        none,
+        add,
+        admin,
+        del
+    }
+    public static type_chat_set type_chat_now =type_chat_set.none;
     public static Queue<battle> que_bt_infa = new Queue<battle>();
     public  static Queue<message> que_ms_now = new Queue<message>();
     //public Queue<message> que_ms_now_last = new Queue<message>();
@@ -94,7 +102,9 @@ public class data_sql : MonoBehaviour
         {
             get_message_bl_now = false;
         }
-            
+
+        if (st != "menu set chat")
+            type_chat_now = type_chat_set.none;
         if (st != "infa chat" && st!= "menu set chat")
             data_sql.pl_ch_now = null;
         else
@@ -246,41 +256,25 @@ public class data_sql : MonoBehaviour
             }
             else
             {
-                //Debug.Log(web.downloadHandler.text);
                 List<lt_chat> lt_ch = new List<lt_chat>();
                 if (!(web.downloadHandler.text == "" || web.downloadHandler.text == null))
                 {
                     string[] stt = web.downloadHandler.text.Split("_");
-                    //Debug.Log("is truue " + stt.Length + " " );
-                    
                     if (stt.Length > 0)
                     {
                        
                         for (int i = 0; i < stt.Length-1; i+=4)
                         {
-                            //int ind_now = i / 2;
+
                             lt_ch.Add(new lt_chat(stt[i], stt[i + 1], int.Parse(stt[i + 2]), stt[i+3]));
                         }
                         
                     }
                 }
                 ui_ch.print_chats(lt_ch);
-
-                /*
-
-                
-                */
-                //
-
-
-
-                //MatchCollection mc = Regex.Matches(web.downloadHandler.text, @"_");
-                //string[] splitData = Regex.Split(dataText, @"_");
             }
             web.Dispose();
         }
-
-
     }
     public IEnumerator get_chats_in_add(string url, string name, string login, ui_chat ui_ch)
     {
@@ -379,6 +373,104 @@ public class data_sql : MonoBehaviour
 
 
     }
+    public IEnumerator get_chats_players_admin(string url, string login, string chat, ui_chat ui_ch)
+    {
+        Debug.Log(chat + " " + login);
+        using (UnityWebRequest web = UnityWebRequest.Get(url + "?php_chat=" + chat + "&php_player=" + login))
+        {
+            yield return web.SendWebRequest();
+            if (web.error != null)
+            {
+                Debug.Log("error web");
+            }
+            else
+            {
+                Debug.Log(web.downloadHandler.text);
+                List<string> lt_ch = new List<string>();
+                if (!(web.downloadHandler.text == "" || web.downloadHandler.text == null))
+                {
+                    string[] stt = web.downloadHandler.text.Split("_");
+                    //Debug.Log("is truue " + stt.Length + " " );
+
+                    if (stt.Length > 0)
+                    {
+
+                        for (int i = 0; i < stt.Length - 1; i++)
+                        {
+                            lt_ch.Add(stt[i]);
+                            //int ind_now = i / 2;
+                            //lt_ch.Add(new player(stt[i], stt[i + 1], int.Parse(stt[i + 2]), stt[i + 3]));
+                        }
+
+                    }
+                }
+                ui_ch.print_players(lt_ch);
+
+                /*
+
+                
+                */
+                //
+
+
+
+                //MatchCollection mc = Regex.Matches(web.downloadHandler.text, @"_");
+                //string[] splitData = Regex.Split(dataText, @"_");
+            }
+            web.Dispose();
+        }
+
+
+    }
+    public IEnumerator get_chats_players_del(string url, string login, string chat, ui_chat ui_ch)
+    {
+        Debug.Log(chat + " " + login);
+        using (UnityWebRequest web = UnityWebRequest.Get(url + "?php_chat=" + chat + "&php_player=" + login))
+        {
+            yield return web.SendWebRequest();
+            if (web.error != null)
+            {
+                Debug.Log("error web");
+            }
+            else
+            {
+                Debug.Log(web.downloadHandler.text);
+                List<string> lt_ch = new List<string>();
+                if (!(web.downloadHandler.text == "" || web.downloadHandler.text == null))
+                {
+                    string[] stt = web.downloadHandler.text.Split("_");
+                    //Debug.Log("is truue " + stt.Length + " " );
+
+                    if (stt.Length > 0)
+                    {
+
+                        for (int i = 0; i < stt.Length - 1; i++)
+                        {
+                            lt_ch.Add(stt[i]);
+                            //int ind_now = i / 2;
+                            //lt_ch.Add(new player(stt[i], stt[i + 1], int.Parse(stt[i + 2]), stt[i + 3]));
+                        }
+
+                    }
+                }
+                ui_ch.print_players(lt_ch);
+
+                /*
+
+                
+                */
+                //
+
+
+
+                //MatchCollection mc = Regex.Matches(web.downloadHandler.text, @"_");
+                //string[] splitData = Regex.Split(dataText, @"_");
+            }
+            web.Dispose();
+        }
+
+
+    }
 
     public IEnumerator add_players_in_chat(string url, string login, string chat)
     {
@@ -395,6 +487,93 @@ public class data_sql : MonoBehaviour
                 Debug.Log(web.downloadHandler.text);
                 List<string> lt_ch = new List<string>();
                 st_perehod_scene("infa chat");
+            }
+            web.Dispose();
+        }
+
+
+    }
+    public IEnumerator admin_players_in_chat(string url, string login,string login_now, string chat)
+    {
+        Debug.Log(chat + " " + login);
+        using (UnityWebRequest web = UnityWebRequest.Get(url + "?php_chat=" + chat + "&php_player=" + login+ "&php_admin=" + login_now))
+        {
+            yield return web.SendWebRequest();
+            if (web.error != null)
+            {
+                Debug.Log("error web");
+            }
+            else
+            {
+                Debug.Log(web.downloadHandler.text);
+                List<string> lt_ch = new List<string>();
+                data_sql.chat_now.status = "member";
+                st_perehod_scene("infa chat");
+            }
+            web.Dispose();
+        }
+
+
+    }
+    public IEnumerator del_players_in_chat(string url, string login, string chat)
+    {
+        Debug.Log(chat + " " + login);
+        using (UnityWebRequest web = UnityWebRequest.Get(url + "?php_chat=" + chat + "&php_player=" + login))
+        {
+            yield return web.SendWebRequest();
+            if (web.error != null)
+            {
+                Debug.Log("error web");
+            }
+            else
+            {
+                Debug.Log(web.downloadHandler.text);
+                List<string> lt_ch = new List<string>();
+                st_perehod_scene("infa chat");
+            }
+            web.Dispose();
+        }
+
+
+    }
+    public IEnumerator exit_players_in_chat(string url, string login, string chat)
+    {
+        Debug.Log(chat + " " + login);
+        using (UnityWebRequest web = UnityWebRequest.Get(url + "?php_chat=" + chat + "&php_player=" + login))
+        {
+            yield return web.SendWebRequest();
+            if (web.error != null)
+            {
+                Debug.Log("error web");
+            }
+            else
+            {
+                Debug.Log(web.downloadHandler.text);
+                List<string> lt_ch = new List<string>();
+                st_perehod_scene("menu chats");
+            }
+            web.Dispose();
+        }
+
+
+    }
+
+    public IEnumerator yes_add_player_chat(string url, string login, string chat,ui_tx tx)
+    {
+        Debug.Log(chat + " " + login);
+        using (UnityWebRequest web = UnityWebRequest.Get(url + "?php_chat=" + chat + "&php_player=" + login))
+        {
+            yield return web.SendWebRequest();
+            if (web.error != null)
+            {
+                Debug.Log("error web");
+            }
+            else
+            {
+                Debug.Log(web.downloadHandler.text);
+                List<string> lt_ch = new List<string>();
+
+                //st_perehod_scene("infa chat");
                 /*
                 if (!(web.downloadHandler.text == "" || web.downloadHandler.text == null))
                 {
@@ -421,7 +600,7 @@ public class data_sql : MonoBehaviour
                 
                 */
                 //
-
+                tx.sql_chats();
 
 
                 //MatchCollection mc = Regex.Matches(web.downloadHandler.text, @"_");
@@ -432,7 +611,63 @@ public class data_sql : MonoBehaviour
 
 
     }
-    public IEnumerator yes_add_player_chat(string url, string login, string chat,ui_tx tx)
+    public IEnumerator set_admin_chat(string url, string login, string chat)
+    {
+        Debug.Log(chat + " " + login);
+        WWWForm form = new WWWForm();
+        form.AddField("php_chat", chat);
+        form.AddField("php_player", login);
+        using (UnityWebRequest web = UnityWebRequest.Post(url, form))
+        {
+            yield return web.SendWebRequest();
+            if (web.error != null)
+            {
+                Debug.Log("error web");
+            }
+            else
+            {
+                Debug.Log(web.downloadHandler.text);
+                List<string> lt_ch = new List<string>();
+
+                //st_perehod_scene("infa chat");
+                /*
+                if (!(web.downloadHandler.text == "" || web.downloadHandler.text == null))
+                {
+                    string[] stt = web.downloadHandler.text.Split("_");
+                    //Debug.Log("is truue " + stt.Length + " " );
+
+                    if (stt.Length > 0)
+                    {
+
+                        for (int i = 0; i < stt.Length - 1; i++)
+                        {
+                            lt_ch.Add(stt[i]);
+                            //int ind_now = i / 2;
+                            //lt_ch.Add(new player(stt[i], stt[i + 1], int.Parse(stt[i + 2]), stt[i + 3]));
+                        }
+
+                    }
+                }
+                */
+                //ui_ch.print_players(lt_ch);
+
+                /*
+
+                
+                */
+                //
+                StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().get_players_chat("http://localhost/DBUnity/get_players_chat.php", data_sql.chat_now, false));
+
+
+                //MatchCollection mc = Regex.Matches(web.downloadHandler.text, @"_");
+                //string[] splitData = Regex.Split(dataText, @"_");
+            }
+            web.Dispose();
+        }
+
+
+    }
+    public IEnumerator not_add_player_chat(string url, string login, string chat, ui_tx tx)
     {
         Debug.Log(chat + " " + login);
         using (UnityWebRequest web = UnityWebRequest.Get(url + "?php_chat=" + chat + "&php_player=" + login))
@@ -475,7 +710,7 @@ public class data_sql : MonoBehaviour
                 */
                 //
 
-
+                tx.sql_chats();
 
                 //MatchCollection mc = Regex.Matches(web.downloadHandler.text, @"_");
                 //string[] splitData = Regex.Split(dataText, @"_");
@@ -570,6 +805,20 @@ public class data_sql : MonoBehaviour
                             gm2.GetComponent <Text>().color = Color.red;
                         gm2.GetComponent<Text>().text = st_chat[ch_now];
                     }
+                    if (data_sql.chat_now.status.Equals("admin"))
+                    {
+                        GameObject.Find("pn settings").transform.Find("back chat").gameObject.active = false;
+                        GameObject.Find("pn settings").transform.Find("bt add pl").gameObject.active = true;
+                        GameObject.Find("pn settings").transform.Find("bt del pl").gameObject.active = true;
+                        GameObject.Find("pn settings").transform.Find("bt ren pl").gameObject.active = true;
+                    }
+                    else
+                    {
+                        GameObject.Find("pn settings").transform.Find("back chat").gameObject.active = true;
+                        GameObject.Find("pn settings").transform.Find("bt add pl").gameObject.active = false;
+                        GameObject.Find("pn settings").transform.Find("bt del pl").gameObject.active = false;
+                        GameObject.Find("pn settings").transform.Find("bt ren pl").gameObject.active = false;
+                    }
                     //StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().get_message("http://localhost/DBUnity/get_message.php", data_sql.id_chat_now, false, GameObject.Find("Canvas").GetComponent<ui_chat>()));
                     //GameObject.Find("Canvas").GetComponent<ui_chat>().print_message(que_ms_now_last);
                     //bl_ch = true;
@@ -608,42 +857,59 @@ public class data_sql : MonoBehaviour
                 //que_ms_now = new Queue<message>();
                 //Debug.Log(web.downloadHandler.text);
                 Queue<message> que_ms_now_last = new Queue<message>();
-                //Debug.Log(web.downloadHandler.text+"  ");
+                Debug.Log(web.downloadHandler.text+"  ");
+                bool bl_er = false;
                 if (!(web.downloadHandler.text == "" || web.downloadHandler.text == null))
                 {
-                    string[] stt = web.downloadHandler.text.Split("_");
-                    //Debug.Log(web.downloadHandler.text);
-
-                    if (stt.Length > 0)
+                    if (web.downloadHandler.text.Equals("none"))
                     {
+                        bl_er = true;
+                        st_perehod_scene("menu chats");
+                        //get_message_bl=false;
 
-                        for (int i = 0; i < stt.Length - 1; i += 5)
+                        //return;
+                    }
+                    else
+                    {
+                        string[] stt = web.downloadHandler.text.Split("_");
+                        //Debug.Log(web.downloadHandler.text);
+
+                        if (stt.Length > 0)
                         {
-                            //int ind_now = i / 2;
-                            //Debug.Log(stt[i] + " " + stt[i + 1]);
-                            message pl = new message(int.Parse(stt[i]), stt[i + 1], int.Parse(stt[i + 2]), stt[i + 3], stt[i+4]);
 
-                            que_ms_now.Enqueue(pl);
-                            que_ms_now_last.Enqueue(pl);
+                            for (int i = 0; i < stt.Length - 1; i += 5)
+                            {
+                                //int ind_now = i / 2;
+                                //Debug.Log(stt[i] + " " + stt[i + 1]);
+                                message pl = new message(int.Parse(stt[i]), stt[i + 1], int.Parse(stt[i + 2]), stt[i + 3], stt[i + 4]);
+
+                                que_ms_now.Enqueue(pl);
+                                que_ms_now_last.Enqueue(pl);
+                            }
+
+
                         }
-
-
                     }
 
-                }
-                //col==0
-                if (col==0 &&bl_entry_chat)
-                {
-                    st_perehod_scene("chat");
-                    //SceneManager.LoadScene("chat");
-                }
-                if (SceneManager.GetActiveScene().name == "chat")
-                {
-                    //StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().get_message("http://localhost/DBUnity/get_message.php", data_sql.id_chat_now, false, GameObject.Find("Canvas").GetComponent<ui_chat>()));
-                    GameObject.Find("Canvas").GetComponent<ui_chat>().print_message(que_ms_now_last);
-                    //bl_ch = true;
 
                 }
+                if (!bl_er)
+                {
+                    if (col == 0 && bl_entry_chat)
+                    {
+                        st_perehod_scene("chat");
+                        //SceneManager.LoadScene("chat");
+                    }
+                    if (SceneManager.GetActiveScene().name == "chat")
+                    {
+                        //StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().get_message("http://localhost/DBUnity/get_message.php", data_sql.id_chat_now, false, GameObject.Find("Canvas").GetComponent<ui_chat>()));
+                        GameObject.Find("Canvas").GetComponent<ui_chat>().print_message(que_ms_now_last);
+                        //bl_ch = true;
+
+                    }
+                }
+                //col==0
+
                 get_message_bl = false;
                 //ui_ch.print_message(lt_ms);
 

@@ -81,18 +81,43 @@ public class ui_button : MonoBehaviour
     {
         StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().get_players_chat("http://localhost/DBUnity/get_players_chat.php", data_sql.chat_now,bl));
     }
-    public void sql_add_player_in_chat()
+    public void sql_set_player_in_chat()
     {
-        StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().add_players_in_chat("http://localhost/DBUnity/chat_player_add.php",type.ToString() ,data_sql.chat_now.ch));
+        if(data_sql.type_chat_now==data_sql.type_chat_set.add)
+            StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().add_players_in_chat("http://localhost/DBUnity/chat_player_add.php",type.ToString() ,data_sql.chat_now.ch));
+        else if (data_sql.type_chat_now == data_sql.type_chat_set.admin)
+            StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().admin_players_in_chat("http://localhost/DBUnity/chat_player_admin.php", type.ToString(), data_sql.player_now.login, data_sql.chat_now.ch));
+        else if (data_sql.type_chat_now == data_sql.type_chat_set.del)
+            StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().del_players_in_chat("http://localhost/DBUnity/chat_player_del.php", type.ToString(), data_sql.chat_now.ch));
     }
     public void yes_add_chat(ui_tx tx)
     {
         StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().yes_add_player_chat("http://localhost/DBUnity/yes_chat_player_add.php",data_sql.player_now.login ,((data_sql.lt_chat)type).ch,tx));
-        tx.sql_chats();
+        
     }
-    public void not_add_chat()
+    public void not_add_chat(ui_tx tx)
     {
-
+        StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().not_add_player_chat("http://localhost/DBUnity/not_chat_player_add.php", data_sql.player_now.login, ((data_sql.lt_chat)type).ch, tx));
+        //tx.sql_chats();
+    }
+    public void open_chat_set_add(string scene)
+    {
+        data_sql.type_chat_now = data_sql.type_chat_set.add;
+        perehod_scene(scene);
+    }
+    public void open_chat_set_admin(string scene)
+    {
+        data_sql.type_chat_now = data_sql.type_chat_set.admin;
+        perehod_scene(scene);
+    }
+    public void open_chat_set_del(string scene)
+    {
+        data_sql.type_chat_now = data_sql.type_chat_set.del;
+        perehod_scene(scene);
+    }
+    public void exit_chat()
+    {
+        StartCoroutine(GameObject.Find("data_sql").GetComponent<data_sql>().exit_players_in_chat("http://localhost/DBUnity/chat_player_del.php", data_sql.player_now.login, data_sql.chat_now.ch));
     }
     public void exit_login()
     {
